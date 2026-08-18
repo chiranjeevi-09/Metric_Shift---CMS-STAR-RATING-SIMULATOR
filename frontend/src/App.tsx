@@ -1938,11 +1938,7 @@ const AppContent: React.FC = () => {
   const isLandingPage = location.pathname === '/';
 
   const handleOpenDashboard = () => {
-    if (activeJobId) {
-      navigate('/dashboard');
-    } else {
-      navigate('/upload');
-    }
+    navigate('/dashboard');
   };
 
   const handleUploadSuccess = (jobId: string) => {
