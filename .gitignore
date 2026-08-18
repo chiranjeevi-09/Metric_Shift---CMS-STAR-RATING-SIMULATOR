@@ -1,0 +1,39 @@
+# Node.js
+frontend/node_modules/
+frontend/dist/
+frontend/.svelte-kit/
+frontend/.next/
+frontend/out/
+frontend/build/
+.eslintcache
+
+# Python cache and environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+.pytest_cache/
+
+# System and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Metric Shift Dynamic Run/Upload data (Crucial to ignore large temporary files)
+scratch/
+Rule based model/CORRECTED_RULE_ENGINE_34_ATTRIBUTES.xlsx
+Rule based model/FILTERED_8_TABLES_FINAL.xlsx
+Rule based model/FILTERED_8_TABLES_UPDATED.xlsx
+Rule based model/FILTERED_8_TABLES_WITH_NAMES.xlsx
+*.pkl
+*.log
+*.pdf

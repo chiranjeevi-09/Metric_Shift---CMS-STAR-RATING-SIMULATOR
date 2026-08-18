@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metric Shift — Medicare Advantage Quality Command Center</title>
+<style>
+:root{
+  --navy:#0B3B3A;
+  --teal:#0F7173;
+  --teal2:#17898A;
+  --teal-light:#EAF6F4;
+  --bg:#F7FBFA;
+  --white:#fff;
+  --muted:#6B7D7B;
+  --line:#DDE8E6;
+  --orange:#E39B2F;
+  --green:#25A879;
+  --red:#D85D5D;
+  --shadow:0 12px 30px rgba(11,59,58,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--navy);line-height:1.5}
+a{text-decoration:none;color:inherit}
+.wrap{max-width:1180px;margin:auto;padding:0 28px}
+
+/* NAV */
+.nav{height:76px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;width:225px;height:66px}
+.logo img{display:block;width:225px;height:66px;object-fit:contain;object-position:center}
+.menu{display:flex;gap:30px;font-size:13px;font-weight:600;color:#294B49}
+.menu a:hover{color:var(--teal)}
+.nav-btn{background:var(--teal);color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:700}
+
+/* HERO */
+.hero{padding:48px 0 70px}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:65px;align-items:center}
+.eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:800;color:var(--teal);margin-bottom:10px}
+h1{font-size:48px;line-height:1.06;letter-spacing:-.035em;margin-bottom:20px}
+h1 span{color:var(--teal)}
+.hero-text{max-width:520px;color:var(--muted);font-size:15px;line-height:1.75;margin-bottom:28px}
+.actions{display:flex;gap:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:13px 22px;border-radius:9px;font-size:13px;font-weight:700}
+.primary{background:var(--teal);color:#fff}
+.secondary{border:1px solid var(--teal);color:var(--teal)}
+.stats{display:flex;gap:35px;margin-top:42px}
+.stat strong{font-size:25px;color:var(--orange);display:block}
+.stat small{font-size:11px;color:var(--muted)}
+
+/* DASHBOARD PREVIEW */
+.preview{background:#fff;border-radius:22px;padding:18px;box-shadow:0 22px 55px rgba(11,59,58,.14);border:1px solid #edf3f2}
+.preview-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.preview-title{font-size:12px;font-weight:800}
+.badge{background:#EAF8F1;color:var(--green);padding:5px 9px;border-radius:6px;font-size:9px;font-weight:800}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:#F6FAF9;border-radius:11px;padding:12px}
+.kpi label{font-size:8px;text-transform:uppercase;color:var(--muted)}
+.kpi strong{display:block;font-size:18px;margin-top:3px}
+.kpi .up{color:var(--green)}
+.chart{height:130px;margin-top:10px;background:#F6FAF9;border-radius:11px;padding:14px;display:flex;align-items:end;gap:8px}
+.bar{flex:1;background:linear-gradient(to top,var(--teal),#65C9C3);border-radius:5px 5px 0 0}
+.preview-row{display:flex;gap:8px;margin-top:10px}
+.mini-card{flex:1;background:#F6FAF9;border-radius:10px;padding:10px;font-size:9px}
+.mini-card b{display:block;font-size:11px;margin-bottom:4px}
+.progress{height:5px;background:#DCE8E6;border-radius:5px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--teal);border-radius:5px}
+
+/* FEATURES */
+.section{padding:72px 0}
+.section-head{text-align:center;max-width:650px;margin:0 auto 38px}
+.section-head h2{font-size:29px;letter-spacing:-.02em;margin-bottom:10px}
+.section-head p{font-size:14px;color:var(--muted)}
+.features{display:grid;grid-template-columns:repeat(5,1fr);gap:15px}
+.card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:24px 18px;box-shadow:var(--shadow)}
+.icon{width:42px;height:42px;border-radius:11px;background:var(--teal-light);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:17px}
+.card h3{font-size:14px;margin-bottom:8px}
+.card p{font-size:11.5px;color:var(--muted);line-height:1.65}
+
+/* FLOW */
+.flow-section{background:#fff;border-radius:26px;padding:55px}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:35px}
+.step{text-align:center;position:relative;padding:0 12px}
+.step:not(:last-child):after{content:"→";position:absolute;right:-9px;top:13px;color:#A7BFBC;font-size:18px}
+.step-num{width:38px;height:38px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;margin:0 auto 12px}
+.step h3{font-size:13px;margin-bottom:5px}
+.step p{font-size:10.5px;color:var(--muted)}
+
+/* AUDIENCE */
+.audience{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.aud{background:#fff;border-radius:15px;padding:24px;border:1px solid var(--line)}
+.aud h3{font-size:14px;margin:10px 0 5px}
+.aud p{font-size:12px;color:var(--muted)}
+
+/* CTA */
+.cta{background:var(--teal);color:#fff;border-radius:22px;padding:42px;display:flex;justify-content:space-between;align-items:center;gap:25px;margin-bottom:45px}
+.cta h2{font-size:25px;margin-top:4px}
+.cta p{font-size:12px;color:#C6E6E1;margin-top:5px}
+.cta .primary{background:#fff;color:var(--navy)}
+
+/* FOOTER */
+footer{padding:28px 0 40px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+
+@media(max-width:950px){
+ .hero-grid{grid-template-columns:1fr}.features{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:1fr;gap:25px}.step:not(:last-child):after{content:"↓";right:50%;top:auto;bottom:-25px}.flow-section{padding:35px 20px}
+}
+@media(max-width:650px){
+ .menu{display:none}.features,.audience{grid-template-columns:1fr}.stats{gap:18px}.hero{padding-top:25px}h1{font-size:38px}.cta{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<header class="wrap nav">
+  <a class="logo" href="#"><img src="metric_shift_logo.png" alt="Metric Shift" /></a>
+  <nav class="menu">
+    <a href="#features">Features</a>
+    <a href="#workflow">Workflow</a>
+    <a href="#audience">Who it's for</a>
+  </nav>
+  <a class="nav-btn" href="template_3_sidebar.html">Open Dashboard →</a>
+</header>
+
+<main>
+<section class="wrap hero">
+  <div class="hero-grid">
+    <div>
+      <div class="eyebrow">Medicare Advantage Quality Intelligence</div>
+      <h1>Turn care gaps into <span>measurable impact.</span></h1>
+      <p class="hero-text">
+        Metric Shift brings star-rating tracking, care-gap prioritization,
+        intervention optimization, and impact simulation into one quality command center.
+      </p>
+      <div class="actions">
+        <a class="btn primary" href="template_3_sidebar.html">Open the Dashboard</a>
+        <a class="btn secondary" href="#features">Explore Features</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong>Live</strong><small>Quality monitoring</small></div>
+        <div class="stat"><strong>5</strong><small>Total Plans</small></div>
+        <div class="stat"><strong>360°</strong><small>Member & measure view</small></div>
+      </div>
+    </div>
+
+    <div class="preview">
+      <div class="preview-top">
+        <div class="preview-title">Metric Shift · Quality Command Center</div>
+        <div class="badge">● LIVE</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><label>Current Rating</label><strong>3.5 ★</strong></div>
+        <div class="kpi"><label>Projected</label><strong class="up">4.0 ★</strong></div>
+        <div class="kpi"><label>Priority Gaps</label><strong>248</strong></div>
+      </div>
+      <div class="chart">
+        <div class="bar" style="height:38%"></div><div class="bar" style="height:55%"></div>
+        <div class="bar" style="height:48%"></div><div class="bar" style="height:73%"></div>
+        <div class="bar" style="height:61%"></div><div class="bar" style="height:84%"></div>
+        <div class="bar" style="height:76%"></div>
+      </div>
+      <div class="preview-row">
+        <div class="mini-card"><b>Care-gap closure</b>82% <div class="progress"><i style="width:82%"></i></div></div>
+        <div class="mini-card"><b>Optimization impact</b>+0.5 ★ <div class="progress"><i style="width:76%"></i></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap section" id="features">
+  <div class="section-head">
+    <div class="eyebrow">Core Features</div>
+    <h2>Everything needed to shift the metric</h2>
+    <p>From finding the right members to predicting the quality impact, Metric Shift keeps the complete decision flow in one place.</p>
+  </div>
+
+  <div class="features">
+    <article class="card">
+      <div class="icon">▤</div>
+      <h3>Star Rating Tracking</h3>
+      <p>Monitor measure performance and understand how close each measure is to the next star cut point.</p>
+    </article>
+    <article class="card">
+      <div class="icon">◎</div>
+      <h3>Care Gap Prioritization</h3>
+      <p>Find open gaps and prioritize members based on where intervention can create the greatest value.</p>
+    </article>
+    <article class="card">
+      <div class="icon">⚙</div>
+      <h3>Intervention Optimization</h3>
+      <p>Select measures, capacity, and expected closure rates to identify an effective intervention strategy.</p>
+    </article>
+    <article class="card">
+      <div class="icon">↗</div>
+      <h3>Impact Simulation</h3>
+      <p>Run what-if scenarios and compare current versus projected star-rating outcomes before acting.</p>
+    </article>
+    <article class="card">
+      <div class="icon">♙</div>
+      <h3>Member Insights</h3>
+      <p>Drill into individual members, care gaps, conditions, outreach information, and intervention history.</p>
+    </article>
+  </div>
+</section>
+
+<section class="wrap section" id="workflow">
+  <div class="flow-section">
+    <div class="section-head">
+      <div class="eyebrow">How Metric Shift Works</div>
+      <h2>From data to quality improvement</h2>
+      <p>A simple workflow that connects measurement, prioritization, optimization, and action.</p>
+    </div>
+    <div class="flow">
+      <div class="step"><div class="step-num">01</div><h3>Track</h3><p>Monitor star measures and current performance.</p></div>
+      <div class="step"><div class="step-num">02</div><h3>Identify</h3><p>Find members with actionable care gaps.</p></div>
+      <div class="step"><div class="step-num">03</div><h3>Prioritize</h3><p>Rank gaps by potential quality impact.</p></div>
+      <div class="step"><div class="step-num">04</div><h3>Optimize</h3><p>Select the best intervention strategy.</p></div>
+      <div class="step"><div class="step-num">05</div><h3>Simulate</h3><p>Project the star-rating shift before outreach.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap section" id="audience">
+  <div class="section-head">
+    <div class="eyebrow">Built For</div>
+    <h2>Teams closest to the quality score</h2>
+  </div>
+  <div class="audience">
+    <div class="aud"><div class="icon">◎</div><h3>Program Analysts</h3><p>Monitor measures, contracts, performance, and cut-point proximity.</p></div>
+    <div class="aud"><div class="icon">✚</div><h3>Care Management</h3><p>Prioritize members and focus outreach on the gaps that matter most.</p></div>
+    <div class="aud"><div class="icon">◫</div><h3>Quality & Analytics</h3><p>Model scenarios, evaluate outcomes, and connect interventions to quality improvement.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="cta">
+    <div>
+      <div class="eyebrow" style="color:#BFE7DF;margin:0">Ready to move the metric?</div>
+      <h2>See where your star rating can shift.</h2>
+      <p>Open the command center and explore the full Metric Shift workflow.</p>
+    </div>
+    <a class="btn primary" href="template_3_sidebar.html">Open Dashboard →</a>
+  </div>
+</section>
+</main>
+
+<footer class="wrap">
+  <span>© 2026 Metric Shift · Medicare Advantage Quality Intelligence</span>
+  <span>Track · Prioritize · Optimize · Simulate</span>
+</footer>
+
+</body>
+</html>
