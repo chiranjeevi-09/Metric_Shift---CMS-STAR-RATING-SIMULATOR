@@ -45,7 +45,7 @@ JOBS_MUTEX = threading.Lock()
 import tempfile
 
 # Persistent / Temp Run & Upload directories
-if os.environ.get("VERCEL"):
+if os.environ.get("VERCEL") or os.environ.get("RENDER"):
     RUNS_DIR = os.path.join(tempfile.gettempdir(), "runs")
     UPLOADS_DIR = os.path.join(tempfile.gettempdir(), "uploads")
 else:

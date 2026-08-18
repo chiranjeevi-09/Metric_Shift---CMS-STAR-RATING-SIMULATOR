@@ -34,6 +34,8 @@ Rule based model/CORRECTED_RULE_ENGINE_34_ATTRIBUTES.xlsx
 Rule based model/FILTERED_8_TABLES_FINAL.xlsx
 Rule based model/FILTERED_8_TABLES_UPDATED.xlsx
 Rule based model/FILTERED_8_TABLES_WITH_NAMES.xlsx
-*.pkl
 *.log
 *.pdf
+# Ignore run data pkl files, but NOT ML model pkl files
+scratch/**/*.pkl
+!ML model/models/*.pkl
