@@ -47,7 +47,9 @@ import {
   listMembers,
   getMemberDetails,
   listMeasures,
-  runOptimization
+  runOptimization,
+  getExcelDownloadUrl,
+  getPdfDownloadUrl
 } from './api/client';
 import type {
   PipelineJob,
@@ -1418,18 +1420,18 @@ const OptimizationPage: React.FC<PageProps> = ({ jobId, sidebarCollapsed, setSid
   };
 
   const handleDownloadBoth = () => {
-    // 1. Trigger Excel download
+    // 1. Trigger Excel download using absolute backend URL
     const linkExcel = document.createElement('a');
-    linkExcel.href = `/api/download/${jobId}/Optimal_Patient_Outreach_Campaign.xlsx`;
+    linkExcel.href = getExcelDownloadUrl(jobId);
     linkExcel.download = 'Optimal_Patient_Outreach_Campaign.xlsx';
     document.body.appendChild(linkExcel);
     linkExcel.click();
     document.body.removeChild(linkExcel);
 
-    // 2. Trigger PDF download
+    // 2. Trigger PDF download using absolute backend URL
     setTimeout(() => {
       const linkPdf = document.createElement('a');
-      linkPdf.href = `/api/download-pdf/${jobId}/Optimal_Patient_Outreach_Campaign.pdf`;
+      linkPdf.href = getPdfDownloadUrl(jobId);
       linkPdf.download = 'Optimal_Patient_Outreach_Campaign.pdf';
       document.body.appendChild(linkPdf);
       linkPdf.click();

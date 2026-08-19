@@ -258,5 +258,16 @@ export const getLocationsData = async (jobId: string): Promise<LocationsResponse
 
 export const getDownloadUrl = (jobId: string): string => {
   const validId = resolveJobId(jobId);
-  return `${API_BASE_URL}/api/download/${validId}`;
+  return `${API_BASE_URL}/api/download/${validId}/Optimal_Patient_Outreach_Campaign.xlsx`;
 };
+
+export const getExcelDownloadUrl = (jobId: string): string => {
+  const validId = resolveJobId(jobId);
+  return `${API_BASE_URL}/api/download/${validId}/Optimal_Patient_Outreach_Campaign.xlsx`;
+};
+
+export const getPdfDownloadUrl = (jobId: string): string => {
+  const validId = resolveJobId(jobId);
+  return `${API_BASE_URL}/api/download-pdf/${validId}/Optimal_Patient_Outreach_Campaign.pdf`;
+};
+
