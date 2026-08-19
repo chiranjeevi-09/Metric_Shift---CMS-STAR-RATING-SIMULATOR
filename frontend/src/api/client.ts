@@ -180,19 +180,33 @@ export const uploadDataset = async (file: File): Promise<{ job_id: string; statu
   return response.data;
 };
 
+const resolveJobId = (jobId?: string): string => {
+  if (jobId && typeof jobId === 'string' && jobId.trim() && jobId !== 'undefined' && jobId !== 'null') {
+    return jobId.trim();
+  }
+  const stored = localStorage.getItem('ma_star_job_id');
+  if (stored && stored.trim()) {
+    return stored.trim();
+  }
+  return 'default';
+};
+
 export const getPipelineStatus = async (jobId: string): Promise<PipelineJob> => {
-  const response = await apiClient.get<PipelineJob>(`/api/pipeline/${jobId}`);
+  const validId = resolveJobId(jobId);
+  const response = await apiClient.get<PipelineJob>(`/api/pipeline/${validId}`);
   return response.data;
 };
 
 export const getDashboardData = async (jobId: string, planId?: string): Promise<DashboardMetrics> => {
+  const validId = resolveJobId(jobId);
   const params = planId ? { plan_id: planId } : {};
-  const response = await apiClient.get<DashboardMetrics>(`/api/dashboard/${jobId}`, { params });
+  const response = await apiClient.get<DashboardMetrics>(`/api/dashboard/${validId}`, { params });
   return response.data;
 };
 
 export const getPlanData = async (jobId: string, planId: string): Promise<PlanDetails> => {
-  const response = await apiClient.get<PlanDetails>(`/api/plans/${jobId}/${planId}`);
+  const validId = resolveJobId(jobId);
+  const response = await apiClient.get<PlanDetails>(`/api/plans/${validId}/${planId}`);
   return response.data;
 };
 
@@ -208,35 +222,41 @@ export const listMembers = async (
     max_age?: number;
   }
 ): Promise<MembersResponse> => {
-  const response = await apiClient.get<MembersResponse>(`/api/members/${jobId}`, { params });
+  const validId = resolveJobId(jobId);
+  const response = await apiClient.get<MembersResponse>(`/api/members/${validId}`, { params });
   return response.data;
 };
 
 export const getMemberDetails = async (jobId: string, memberId: string): Promise<MemberDetails> => {
-  const response = await apiClient.get<MemberDetails>(`/api/members/${jobId}/${memberId}`);
+  const validId = resolveJobId(jobId);
+  const response = await apiClient.get<MemberDetails>(`/api/members/${validId}/${memberId}`);
   return response.data;
 };
 
 export const listMeasures = async (jobId: string): Promise<CMSMeasuresResponse> => {
-  const response = await apiClient.get<CMSMeasuresResponse>(`/api/measures/${jobId}`);
+  const validId = resolveJobId(jobId);
+  const response = await apiClient.get<CMSMeasuresResponse>(`/api/measures/${validId}`);
   return response.data;
 };
 
 export const runOptimization = async (jobId: string, planId: string, maxMembers: number): Promise<OptimizationResponse> => {
+  const validId = resolveJobId(jobId);
   const formData = new URLSearchParams();
   formData.append('plan_id', planId);
   formData.append('max_members', String(maxMembers));
-  const response = await apiClient.post<OptimizationResponse>(`/api/optimize/${jobId}`, formData, {
+  const response = await apiClient.post<OptimizationResponse>(`/api/optimize/${validId}`, formData, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
   return response.data;
 };
 
 export const getLocationsData = async (jobId: string): Promise<LocationsResponse> => {
-  const response = await apiClient.get<LocationsResponse>(`/api/location/${jobId}`);
+  const validId = resolveJobId(jobId);
+  const response = await apiClient.get<LocationsResponse>(`/api/location/${validId}`);
   return response.data;
 };
 
 export const getDownloadUrl = (jobId: string): string => {
-  return `${API_BASE_URL}/api/download/${jobId}`;
+  const validId = resolveJobId(jobId);
+  return `${API_BASE_URL}/api/download/${validId}`;
 };

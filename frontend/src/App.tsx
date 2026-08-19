@@ -61,7 +61,7 @@ import type {
 import logoImg from '../Metric shift logo.png';
 
 // Global state for active Job ID (stored in localStorage)
-const getStoredJobId = () => localStorage.getItem('ma_star_job_id') || '';
+const getStoredJobId = () => localStorage.getItem('ma_star_job_id') || 'default';
 const setStoredJobId = (jobId: string) => {
   if (jobId) {
     localStorage.setItem('ma_star_job_id', jobId);
@@ -101,20 +101,19 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
 
 // --- GLOBAL SIDEBAR COMPONENT ---
 interface SidebarProps {
-  activeJobId: string;
   collapsed: boolean;
 }
 
-const NavigationSidebar: React.FC<SidebarProps> = ({ activeJobId, collapsed }) => {
+const NavigationSidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const location = useLocation();
   const path = location.pathname;
 
   const menuItems = [
-    { name: 'Home', path: '/dashboard', icon: Home, disabled: !activeJobId },
-    { name: 'Optimization', path: '/optimization', icon: Activity, disabled: !activeJobId },
-    { name: 'Plans', path: '/plans', icon: FileSpreadsheet, disabled: !activeJobId },
-    { name: 'Members', path: '/members', icon: Users, disabled: !activeJobId },
-    { name: 'CMS Measure', path: '/cms-measures', icon: CheckSquare, disabled: !activeJobId }
+    { name: 'Home', path: '/dashboard', icon: Home, disabled: false },
+    { name: 'Optimization', path: '/optimization', icon: Activity, disabled: false },
+    { name: 'Plans', path: '/plans', icon: FileSpreadsheet, disabled: false },
+    { name: 'Members', path: '/members', icon: Users, disabled: false },
+    { name: 'CMS Measure', path: '/cms-measures', icon: CheckSquare, disabled: false }
   ];
 
   return (
@@ -211,7 +210,6 @@ const NavigationHeader: React.FC<HeaderProps> = ({
     document.getElementById('global-file-upload-input')?.click();
   };
 
-  const isHomePage = location.pathname === '/' || location.pathname === '/dashboard';
   const showSearch = location.pathname.startsWith('/members') || location.pathname.startsWith('/optimization');
 
   return (
@@ -243,7 +241,7 @@ const NavigationHeader: React.FC<HeaderProps> = ({
         </div>
       </div>
       <div className="header-right">
-        {isHomePage && (
+        {(location.pathname === '/dashboard' || location.pathname === '/optimization') && (
           <button 
             className="btn btn-primary" 
             onClick={triggerUploadClick}
@@ -277,115 +275,7 @@ const NavigationHeader: React.FC<HeaderProps> = ({
   );
 };
 
-// --- UPLOAD PAGE ---
-interface UploadPageProps {
-  onUploadSuccess: (jobId: string) => void;
-  sidebarCollapsed: boolean;
-  setSidebarCollapsed: (c: boolean) => void;
-}
 
-const UploadPage: React.FC<UploadPageProps> = ({ onUploadSuccess, sidebarCollapsed, setSidebarCollapsed }) => {
-  const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      if (selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls')) {
-        setFile(selectedFile);
-        setError(null);
-      } else {
-        setError('Please upload a valid Excel file (.xlsx or .xls).');
-        setFile(null);
-      }
-    }
-  };
-
-  const handleUploadSubmit = async () => {
-    if (!file) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await uploadDataset(file);
-      onUploadSuccess(response.job_id);
-      navigate(`/pipeline/${response.job_id}`);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to upload dataset. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div style={{ maxWidth: '800px', margin: '40px auto', width: '100%' }}>
-      <NavigationHeader 
-        title="Upload Dataset" 
-        subtitle="Import members data to begin care gap optimization" 
-        sidebarCollapsed={sidebarCollapsed}
-        setSidebarCollapsed={setSidebarCollapsed}
-      />
-      <div className="card" style={{ marginTop: '24px' }}>
-        <h2 style={{ fontSize: '20px', marginBottom: '16px' }}>Excel Import Engine</h2>
-        <p style={{ color: 'var(--color-text-muted)', marginBottom: '24px' }}>
-          Upload your Excel dataset containing Medicare Advantage plans, CMS measures, member demographics, and history records to launch the processing pipeline.
-        </p>
-
-        <div
-          className="upload-dropzone"
-          onClick={() => document.getElementById('file-upload-input-page')?.click()}
-        >
-          <UploadCloud className="upload-icon" />
-          <div>
-            <p style={{ fontWeight: 600, fontSize: '15px' }}>
-              {file ? file.name : 'Click to browse files or drag and drop here'}
-            </p>
-            <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-              Supports Excel Workbooks (.xlsx, .xls) up to 25MB
-            </p>
-          </div>
-          <input
-            id="file-upload-input-page"
-            type="file"
-            accept=".xlsx, .xls"
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-          />
-        </div>
-
-        {error && (
-          <div className="pipeline-stage failed" style={{ marginTop: '20px', gap: '12px' }}>
-            <AlertTriangle className="stage-icon failed" />
-            <span style={{ fontSize: '14px', color: 'var(--color-danger)' }}>{error}</span>
-          </div>
-        )}
-
-        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-          {file && (
-            <button className="btn btn-secondary" onClick={() => setFile(null)} disabled={loading}>
-              Clear
-            </button>
-          )}
-          <button
-            className="btn btn-primary"
-            onClick={handleUploadSubmit}
-            disabled={!file || loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 size={16} className="stage-icon running" />
-                <span>Uploading...</span>
-              </>
-            ) : (
-              <span>Start Pipeline</span>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // --- PIPELINE PROCESSING PAGE ---
 const PipelinePage: React.FC = () => {
@@ -469,7 +359,7 @@ const PipelinePage: React.FC = () => {
                 {status === 'completed' && <CheckCircle size={16} />}
                 {status === 'failed' && <AlertTriangle size={16} />}
                 {status === 'running' && <Loader2 size={16} className="stage-icon running" />}
-                {status === 'pending' && <span style={{ fontSize: '10px' }}>●</span>}
+                {status === 'pending' && <span style={{ fontSize: '10px' }}>â—</span>}
               </div>
               <div className="stage-info">
                 <span className="stage-name">{stage.label}</span>
@@ -504,7 +394,7 @@ const PipelinePage: React.FC = () => {
 
       {jobState?.status === 'completed' && (
         <div style={{ marginTop: '32px', textAlign: 'center' }}>
-          <button className="btn btn-primary" onClick={() => navigate('/')}>
+          <button className="btn btn-primary" onClick={() => navigate('/dashboard')}>
             View Dashboard Results
           </button>
         </div>
@@ -512,7 +402,7 @@ const PipelinePage: React.FC = () => {
 
       {jobState?.status === 'failed' && (
         <div style={{ marginTop: '32px', textAlign: 'center' }}>
-          <button className="btn btn-secondary" onClick={() => navigate('/upload')}>
+          <button className="btn btn-secondary" onClick={() => document.getElementById('global-file-upload-input')?.click()}>
             Retry Upload
           </button>
         </div>
@@ -1225,7 +1115,7 @@ const MemberDetailsPage: React.FC<PageProps> = ({ jobId, sidebarCollapsed, setSi
 
       <div style={{ marginBottom: '20px' }}>
         <button className="btn btn-secondary" onClick={() => navigate('/members')}>
-          ← Back to Members
+          â† Back to Members
         </button>
       </div>
 
@@ -1756,167 +1646,219 @@ const OptimizationPage: React.FC<PageProps> = ({ jobId, sidebarCollapsed, setSid
   );
 };
 
-// --- MAIN ROUTER & APP ---
-// --- LANDING PAGE COMPONENT ---
-const LandingPage: React.FC<{ onOpenDashboard: () => void }> = ({ onOpenDashboard }) => {
-  const scrollToSection = (e: React.MouseEvent, id: string) => {
+
+// --- LANDING PAGE ---
+const LandingPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const openDashboard = () => navigate('/dashboard');
+
+  const scrollTo = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <div className="landing-page">
-      <header className="wrap nav">
-        <a className="logo" href="#" onClick={(e) => e.preventDefault()} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-          <img src={logoImg} alt="Metric Shift" style={{ height: '42px', width: 'auto' }} />
-          <span style={{ fontSize: '22px', fontWeight: 800, color: '#0B3B3A', letterSpacing: '-0.02em' }}>
-            Metric Shift
-          </span>
-        </a>
-        <nav className="menu">
-          <a href="#features" onClick={(e) => scrollToSection(e, 'features')}>Features</a>
-          <a href="#workflow" onClick={(e) => scrollToSection(e, 'workflow')}>Workflow</a>
-          <a href="#audience" onClick={(e) => scrollToSection(e, 'audience')}>Who it's for</a>
+    <div style={{ fontFamily: 'Inter, Arial, sans-serif', background: '#F7FBFA', color: '#0B3B3A', minHeight: '100vh' }}>
+      <style>{`
+        .lp-wrap { max-width: 1180px; margin: auto; padding: 0 28px; }
+        .lp-nav { height: 76px; display: flex; align-items: center; justify-content: space-between; }
+        .lp-logo { display: flex; align-items: center; }
+        .lp-logo img { height: 56px; width: auto; object-fit: contain; }
+        .lp-menu { display: flex; gap: 30px; font-size: 13px; font-weight: 600; color: #294B49; }
+        .lp-menu a { text-decoration: none; color: inherit; cursor: pointer; }
+        .lp-menu a:hover { color: #0F7173; }
+        .lp-nav-btn { background: #0F7173; color: #fff; padding: 11px 18px; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; }
+        .lp-hero { padding: 48px 0 70px; }
+        .lp-hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 65px; align-items: center; }
+        .lp-eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; font-weight: 800; color: #0F7173; margin-bottom: 10px; }
+        .lp-h1 { font-size: 48px; line-height: 1.06; letter-spacing: -.035em; margin-bottom: 20px; }
+        .lp-h1 span { color: #0F7173; }
+        .lp-hero-text { max-width: 520px; color: #6B7D7B; font-size: 15px; line-height: 1.75; margin-bottom: 28px; }
+        .lp-actions { display: flex; gap: 12px; }
+        .lp-btn { display: inline-flex; align-items: center; justify-content: center; padding: 13px 22px; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; }
+        .lp-btn.primary { background: #0F7173; color: #fff; }
+        .lp-btn.secondary { border: 1.5px solid #0F7173; color: #0F7173; background: transparent; }
+        .lp-stats { display: flex; gap: 35px; margin-top: 42px; }
+        .lp-stat strong { font-size: 25px; color: #E39B2F; display: block; }
+        .lp-stat small { font-size: 11px; color: #6B7D7B; }
+        .lp-preview { background: #fff; border-radius: 22px; padding: 18px; box-shadow: 0 22px 55px rgba(11,59,58,.14); border: 1px solid #edf3f2; }
+        .lp-preview-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .lp-preview-title { font-size: 12px; font-weight: 800; }
+        .lp-badge { background: #EAF8F1; color: #25A879; padding: 5px 9px; border-radius: 6px; font-size: 9px; font-weight: 800; }
+        .lp-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+        .lp-kpi { background: #F6FAF9; border-radius: 11px; padding: 12px; }
+        .lp-kpi label { font-size: 8px; text-transform: uppercase; color: #6B7D7B; display: block; }
+        .lp-kpi strong { display: block; font-size: 18px; margin-top: 3px; }
+        .lp-kpi .up { color: #25A879; }
+        .lp-chart { height: 130px; margin-top: 10px; background: #F6FAF9; border-radius: 11px; padding: 14px; display: flex; align-items: flex-end; gap: 8px; }
+        .lp-bar { flex: 1; background: linear-gradient(to top,#0F7173,#65C9C3); border-radius: 5px 5px 0 0; }
+        .lp-preview-row { display: flex; gap: 8px; margin-top: 10px; }
+        .lp-mini-card { flex: 1; background: #F6FAF9; border-radius: 10px; padding: 10px; font-size: 9px; }
+        .lp-mini-card b { display: block; font-size: 11px; margin-bottom: 4px; }
+        .lp-prog { height: 5px; background: #DCE8E6; border-radius: 5px; overflow: hidden; }
+        .lp-prog i { display: block; height: 100%; background: #0F7173; border-radius: 5px; }
+        .lp-section { padding: 72px 0; }
+        .lp-section-head { text-align: center; max-width: 650px; margin: 0 auto 38px; }
+        .lp-section-head h2 { font-size: 29px; letter-spacing: -.02em; margin-bottom: 10px; }
+        .lp-section-head p { font-size: 14px; color: #6B7D7B; }
+        .lp-features { display: grid; grid-template-columns: repeat(5,1fr); gap: 15px; }
+        .lp-card { background: #fff; border: 1px solid #DDE8E6; border-radius: 17px; padding: 24px 18px; box-shadow: 0 12px 30px rgba(11,59,58,.08); }
+        .lp-icon { width: 42px; height: 42px; border-radius: 11px; background: #EAF6F4; color: #0F7173; display: flex; align-items: center; justify-content: center; font-size: 19px; margin-bottom: 17px; }
+        .lp-card h3 { font-size: 14px; margin-bottom: 8px; }
+        .lp-card p { font-size: 11.5px; color: #6B7D7B; line-height: 1.65; }
+        .lp-flow-section { background: #fff; border-radius: 26px; padding: 55px; }
+        .lp-flow { display: grid; grid-template-columns: repeat(5,1fr); gap: 0; margin-top: 35px; }
+        .lp-step { text-align: center; position: relative; padding: 0 12px; }
+        .lp-step-num { width: 38px; height: 38px; border-radius: 50%; background: #0F7173; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; margin: 0 auto 12px; }
+        .lp-step h3 { font-size: 13px; margin-bottom: 5px; }
+        .lp-step p { font-size: 10.5px; color: #6B7D7B; }
+        .lp-audience { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+        .lp-aud { background: #fff; border-radius: 15px; padding: 24px; border: 1px solid #DDE8E6; }
+        .lp-aud h3 { font-size: 14px; margin: 10px 0 5px; }
+        .lp-aud p { font-size: 12px; color: #6B7D7B; }
+        .lp-cta { background: #0F7173; color: #fff; border-radius: 22px; padding: 42px; display: flex; justify-content: space-between; align-items: center; gap: 25px; margin-bottom: 45px; }
+        .lp-cta h2 { font-size: 25px; margin-top: 4px; }
+        .lp-cta p { font-size: 12px; color: #C6E6E1; margin-top: 5px; }
+        .lp-cta .lp-btn.primary { background: #fff; color: #0B3B3A; }
+        .lp-footer { padding: 28px 0 40px; border-top: 1px solid #DDE8E6; font-size: 11px; color: #6B7D7B; display: flex; justify-content: space-between; }
+        @media(max-width:950px){.lp-hero-grid{grid-template-columns:1fr}.lp-features{grid-template-columns:repeat(2,1fr)}.lp-flow{grid-template-columns:1fr;gap:25px}}
+        @media(max-width:650px){.lp-menu{display:none}.lp-features,.lp-audience{grid-template-columns:1fr}}
+      `}</style>
+
+      {/* NAV */}
+      <header className="lp-wrap lp-nav">
+        <div className="lp-logo">
+          <img src={logoImg} alt="Metric Shift" />
+        </div>
+        <nav className="lp-menu">
+          <a onClick={(e) => scrollTo(e, 'lp-features')}>Features</a>
+          <a onClick={(e) => scrollTo(e, 'lp-workflow')}>Workflow</a>
+          <a onClick={(e) => scrollTo(e, 'lp-audience')}>Who it's for</a>
         </nav>
-        <button className="nav-btn" onClick={onOpenDashboard}>
-          Open Dashboard →
-        </button>
+        <button className="lp-nav-btn" onClick={openDashboard}>Open Dashboard →</button>
       </header>
 
+      {/* HERO */}
       <main>
-        <section className="wrap hero">
-          <div className="hero-grid">
+        <section className="lp-wrap lp-hero">
+          <div className="lp-hero-grid">
             <div>
-              <div className="eyebrow">Medicare Advantage Quality Intelligence</div>
-              <h1>Turn care gaps into <span>measurable impact.</span></h1>
-              <p className="hero-text">
+              <div className="lp-eyebrow">Medicare Advantage Quality Intelligence</div>
+              <h1 className="lp-h1">Turn care gaps into <span>measurable impact.</span></h1>
+              <p className="lp-hero-text">
                 Metric Shift brings star-rating tracking, care-gap prioritization,
                 intervention optimization, and impact simulation into one quality command center.
               </p>
-              <div className="actions">
-                <button className="btn primary" onClick={onOpenDashboard}>
-                  Open the Dashboard
-                </button>
-                <button className="btn secondary" onClick={(e) => scrollToSection(e, 'features')}>
-                  Explore Features
-                </button>
+              <div className="lp-actions">
+                <button className="lp-btn primary" onClick={openDashboard}>Open the Dashboard</button>
+                <button className="lp-btn secondary" onClick={(e) => scrollTo(e, 'lp-features')}>Explore Features</button>
               </div>
-              <div className="stats">
-                <div className="stat"><strong>Real-time</strong><small>Quality monitoring</small></div>
-                <div className="stat"><strong>5</strong><small>Total Plans</small></div>
-                <div className="stat"><strong>360°</strong><small>Member & measure view</small></div>
+              <div className="lp-stats">
+                <div className="lp-stat"><strong>Live</strong><small>Quality monitoring</small></div>
+                <div className="lp-stat"><strong>5</strong><small>Total Plans</small></div>
+                <div className="lp-stat"><strong>360°</strong><small>Member &amp; measure view</small></div>
               </div>
             </div>
-
-            <div className="preview">
-              <div className="preview-top">
-                <div className="preview-title">Metric Shift · Quality Command Center</div>
+            <div className="lp-preview">
+              <div className="lp-preview-top">
+                <div className="lp-preview-title">Metric Shift · Quality Command Center</div>
+                <div className="lp-badge">● LIVE</div>
               </div>
-              <div className="kpis">
-                <div className="kpi"><label>Current Rating</label><strong>3.5 ★</strong></div>
-                <div className="kpi"><label>Projected</label><strong className="up">4.0 ★</strong></div>
-                <div className="kpi"><label>Priority Gaps</label><strong>248</strong></div>
+              <div className="lp-kpis">
+                <div className="lp-kpi"><label>Current Rating</label><strong>3.5 ★</strong></div>
+                <div className="lp-kpi"><label>Projected</label><strong className="up">4.0 ★</strong></div>
+                <div className="lp-kpi"><label>Priority Gaps</label><strong>248</strong></div>
               </div>
-              <div className="chart">
-                <div className="bar" style={{ height: '38%' }}></div>
-                <div className="bar" style={{ height: '55%' }}></div>
-                <div className="bar" style={{ height: '48%' }}></div>
-                <div className="bar" style={{ height: '73%' }}></div>
-                <div className="bar" style={{ height: '61%' }}></div>
-                <div className="bar" style={{ height: '84%' }}></div>
-                <div className="bar" style={{ height: '76%' }}></div>
+              <div className="lp-chart">
+                <div className="lp-bar" style={{height:'38%'}}></div>
+                <div className="lp-bar" style={{height:'55%'}}></div>
+                <div className="lp-bar" style={{height:'48%'}}></div>
+                <div className="lp-bar" style={{height:'73%'}}></div>
+                <div className="lp-bar" style={{height:'61%'}}></div>
+                <div className="lp-bar" style={{height:'84%'}}></div>
+                <div className="lp-bar" style={{height:'76%'}}></div>
               </div>
-              <div className="preview-row">
-                <div className="mini-card"><b>Care-gap closure</b>82% <div className="progress"><i style={{ width: '82%' }}></i></div></div>
-                <div className="mini-card"><b>Optimization impact</b>+0.5 ★ <div className="progress"><i style={{ width: '76%' }}></i></div></div>
+              <div className="lp-preview-row">
+                <div className="lp-mini-card"><b>Care-gap closure</b>82% <div className="lp-prog"><i style={{width:'82%'}}></i></div></div>
+                <div className="lp-mini-card"><b>Optimization impact</b>+0.5 ★ <div className="lp-prog"><i style={{width:'76%'}}></i></div></div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="wrap section" id="features">
-          <div className="section-head">
-            <div className="eyebrow">Core Features</div>
+        {/* FEATURES */}
+        <section className="lp-wrap lp-section" id="lp-features">
+          <div className="lp-section-head">
+            <div className="lp-eyebrow">Core Features</div>
             <h2>Everything needed to shift the metric</h2>
-            <p>From finding the right members to predicting the quality impact, Metric Shift keeps the complete decision flow in one place.</p>
+            <p>From finding the right members to predicting the quality impact.</p>
           </div>
-
-          <div className="features">
-            <article className="card">
-              <div className="icon">▤</div>
-              <h3>Star Rating Tracking</h3>
-              <p>Monitor measure performance and understand how close each measure is to the next star cut point.</p>
-            </article>
-            <article className="card">
-              <div className="icon">◎</div>
-              <h3>Care Gap Prioritization</h3>
-              <p>Find open gaps and prioritize members based on where intervention can create the greatest value.</p>
-            </article>
-            <article className="card">
-              <div className="icon">⚙</div>
-              <h3>Intervention Optimization</h3>
-              <p>Select measures, capacity, and expected closure rates to identify an effective intervention strategy.</p>
-            </article>
-            <article className="card">
-              <div className="icon">↗</div>
-              <h3>Impact Simulation</h3>
-              <p>Run what-if scenarios and compare current versus projected star-rating outcomes before acting.</p>
-            </article>
-            <article className="card">
-              <div className="icon">♙</div>
-              <h3>Member Insights</h3>
-              <p>Drill into individual members, care gaps, conditions, outreach information, and intervention history.</p>
-            </article>
+          <div className="lp-features">
+            {[
+              ['▤','Star Rating Tracking','Monitor measure performance and cut-point proximity.'],
+              ['◎','Care Gap Prioritization','Find open gaps and prioritize members for maximum impact.'],
+              ['⚙','Intervention Optimization','Identify effective strategies with the linear solver.'],
+              ['↗','Impact Simulation','Run what-if scenarios and project star-rating outcomes.'],
+              ['♙','Member Insights','Drill into individual members, gaps, and outreach history.'],
+            ].map(([icon, title, desc]) => (
+              <article className="lp-card" key={title}>
+                <div className="lp-icon">{icon}</div>
+                <h3>{title}</h3>
+                <p>{desc}</p>
+              </article>
+            ))}
           </div>
         </section>
 
-        <section className="wrap section" id="workflow">
-          <div className="flow-section">
-            <div className="section-head">
-              <div className="eyebrow">How Metric Shift Works</div>
+        {/* WORKFLOW */}
+        <section className="lp-wrap lp-section" id="lp-workflow">
+          <div className="lp-flow-section">
+            <div className="lp-section-head">
+              <div className="lp-eyebrow">How Metric Shift Works</div>
               <h2>From data to quality improvement</h2>
-              <p>A simple workflow that connects measurement, prioritization, optimization, and action.</p>
+              <p>A simple workflow connecting measurement, prioritization, optimization, and action.</p>
             </div>
-            <div className="flow">
-              <div className="step"><div className="step-num">01</div><h3>Track</h3><p>Monitor star measures and current performance.</p></div>
-              <div className="step"><div className="step-num">02</div><h3>Identify</h3><p>Find members with actionable care gaps.</p></div>
-              <div className="step"><div className="step-num">03</div><h3>Prioritize</h3><p>Rank gaps by potential quality impact.</p></div>
-              <div className="step"><div className="step-num">04</div><h3>Optimize</h3><p>Select the best intervention strategy.</p></div>
-              <div className="step"><div className="step-num">05</div><h3>Simulate</h3><p>Project the star-rating shift before outreach.</p></div>
+            <div className="lp-flow">
+              {[['01','Track','Monitor star measures and current performance.'],['02','Identify','Find members with actionable care gaps.'],['03','Prioritize','Rank gaps by potential quality impact.'],['04','Optimize','Select the best intervention strategy.'],['05','Simulate','Project the star-rating shift before outreach.']]
+                .map(([num, title, desc]) => (
+                  <div className="lp-step" key={num}>
+                    <div className="lp-step-num">{num}</div>
+                    <h3>{title}</h3><p>{desc}</p>
+                  </div>
+                ))}
             </div>
           </div>
         </section>
 
-        <section className="wrap section" id="audience">
-          <div className="section-head">
-            <div className="eyebrow">Built For</div>
+        {/* AUDIENCE */}
+        <section className="lp-wrap lp-section" id="lp-audience">
+          <div className="lp-section-head">
+            <div className="lp-eyebrow">Built For</div>
             <h2>Teams closest to the quality score</h2>
+            <p>Empowering decision-makers across operations, analytics, and clinical outreach.</p>
           </div>
-          <div className="audience">
-            <div className="aud"><div className="icon">◎</div><h3>Program Analysts</h3><p>Monitor measures, contracts, performance, and cut-point proximity.</p></div>
-            <div className="aud"><div className="icon">✚</div><h3>Care Management</h3><p>Prioritize members and focus outreach on the gaps that matter most.</p></div>
-            <div className="aud"><div className="icon">◫</div><h3>Quality & Analytics</h3><p>Model scenarios, evaluate outcomes, and connect interventions to quality improvement.</p></div>
+          <div className="lp-audience">
+            <div className="lp-aud"><div className="lp-icon">◎</div><h3>Program Analysts</h3><p>Monitor measures, contracts, performance, and cut-point proximity.</p></div>
+            <div className="lp-aud"><div className="lp-icon">✚</div><h3>Care Management</h3><p>Prioritize members and focus outreach on the gaps that matter most.</p></div>
+            <div className="lp-aud"><div className="lp-icon">◫</div><h3>Quality &amp; Analytics</h3><p>Model scenarios and connect interventions to quality improvement.</p></div>
           </div>
         </section>
 
-        <section className="wrap">
-          <div className="cta">
+        {/* CTA */}
+        <section className="lp-wrap">
+          <div className="lp-cta">
             <div>
-              <div className="eyebrow" style={{ color: '#BFE7DF', margin: 0 }}>Ready to move the metric?</div>
+              <div className="lp-eyebrow" style={{color:'#BFE7DF',margin:0}}>Ready to move the metric?</div>
               <h2>See where your star rating can shift.</h2>
               <p>Open the command center and explore the full Metric Shift workflow.</p>
             </div>
-            <button className="btn primary" onClick={onOpenDashboard}>
-              Open Dashboard →
-            </button>
+            <button className="lp-btn primary" onClick={openDashboard}>Open Dashboard →</button>
           </div>
         </section>
       </main>
 
-      <footer className="wrap">
+      <footer className="lp-wrap lp-footer">
         <span>© 2026 Metric Shift · Medicare Advantage Quality Intelligence</span>
         <span>Track · Prioritize · Optimize · Simulate</span>
       </footer>
@@ -1924,7 +1866,7 @@ const LandingPage: React.FC<{ onOpenDashboard: () => void }> = ({ onOpenDashboar
   );
 };
 
-// --- MAIN ROUTER & APP ---
+
 const AppContent: React.FC = () => {
   const [activeJobId, setActiveJobId] = useState<string>(getStoredJobId());
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -1934,12 +1876,12 @@ const AppContent: React.FC = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-
   const isLandingPage = location.pathname === '/';
 
-  const handleOpenDashboard = () => {
-    navigate('/dashboard');
-  };
+  // Always start from landing page on every fresh browser open
+  useEffect(() => {
+    navigate('/', { replace: true });
+  }, []);
 
   const handleUploadSuccess = (jobId: string) => {
     setActiveJobId(jobId);
@@ -1955,7 +1897,7 @@ const AppContent: React.FC = () => {
       navigate(`/pipeline/${res.job_id}`);
     } catch (err: any) {
       setUploadError(err.response?.data?.detail || 'Failed to upload dataset.');
-      navigate('/upload');
+      navigate('/dashboard');
     } finally {
       setUploading(false);
     }
@@ -1976,9 +1918,7 @@ const AppContent: React.FC = () => {
         }}
       />
 
-      {!isLandingPage && (
-        <NavigationSidebar activeJobId={activeJobId} collapsed={sidebarCollapsed} />
-      )}
+      {!isLandingPage && <NavigationSidebar collapsed={sidebarCollapsed} />}
       
       <main className={`main-content ${isLandingPage ? 'landing-fullscreen' : sidebarCollapsed ? 'collapsed' : ''}`}>
         {uploading && (
@@ -1996,125 +1936,67 @@ const AppContent: React.FC = () => {
         )}
 
         <Routes>
-          <Route path="/" element={<LandingPage onOpenDashboard={handleOpenDashboard} />} />
-          <Route 
-            path="/upload" 
-            element={
-              <UploadPage 
-                onUploadSuccess={handleUploadSuccess} 
-                sidebarCollapsed={sidebarCollapsed} 
-                setSidebarCollapsed={setSidebarCollapsed} 
-              />
-            } 
-          />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/pipeline/:jobId" element={<PipelinePage />} />
           
           <Route 
             path="/dashboard" 
             element={
-              activeJobId ? (
-                <HomeDashboard 
-                  jobId={activeJobId} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              ) : (
-                <UploadPage 
-                  onUploadSuccess={handleUploadSuccess} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              )
+              <HomeDashboard 
+                jobId={activeJobId || 'default'} 
+                sidebarCollapsed={sidebarCollapsed} 
+                setSidebarCollapsed={setSidebarCollapsed} 
+              />
             } 
           />
           <Route 
             path="/optimization" 
             element={
-              activeJobId ? (
-                <OptimizationPage 
-                  jobId={activeJobId} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              ) : (
-                <UploadPage 
-                  onUploadSuccess={handleUploadSuccess} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              )
+              <OptimizationPage 
+                jobId={activeJobId || 'default'} 
+                sidebarCollapsed={sidebarCollapsed} 
+                setSidebarCollapsed={setSidebarCollapsed} 
+              />
             } 
           />
           <Route 
             path="/plans" 
             element={
-              activeJobId ? (
-                <PlansPage 
-                  jobId={activeJobId} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              ) : (
-                <UploadPage 
-                  onUploadSuccess={handleUploadSuccess} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              )
+              <PlansPage 
+                jobId={activeJobId || 'default'} 
+                sidebarCollapsed={sidebarCollapsed} 
+                setSidebarCollapsed={setSidebarCollapsed} 
+              />
             } 
           />
           <Route 
             path="/members" 
             element={
-              activeJobId ? (
-                <MembersPage 
-                  jobId={activeJobId} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              ) : (
-                <UploadPage 
-                  onUploadSuccess={handleUploadSuccess} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              )
+              <MembersPage 
+                jobId={activeJobId || 'default'} 
+                sidebarCollapsed={sidebarCollapsed} 
+                setSidebarCollapsed={setSidebarCollapsed} 
+              />
             } 
           />
           <Route 
             path="/members/:memberId" 
             element={
-              activeJobId ? (
-                <MemberDetailsPage 
-                  jobId={activeJobId} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              ) : (
-                <UploadPage 
-                  onUploadSuccess={handleUploadSuccess} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              )
+              <MemberDetailsPage 
+                jobId={activeJobId || 'default'} 
+                sidebarCollapsed={sidebarCollapsed} 
+                setSidebarCollapsed={setSidebarCollapsed} 
+              />
             } 
           />
           <Route 
             path="/cms-measures" 
             element={
-              activeJobId ? (
-                <CMSMeasuresPage 
-                  jobId={activeJobId} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              ) : (
-                <UploadPage 
-                  onUploadSuccess={handleUploadSuccess} 
-                  sidebarCollapsed={sidebarCollapsed} 
-                  setSidebarCollapsed={setSidebarCollapsed} 
-                />
-              )
+              <CMSMeasuresPage 
+                jobId={activeJobId || 'default'} 
+                sidebarCollapsed={sidebarCollapsed} 
+                setSidebarCollapsed={setSidebarCollapsed} 
+              />
             } 
           />
         </Routes>

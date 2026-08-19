@@ -74,13 +74,69 @@ def map_friendly_gap(gap_name):
         return "CMR Session"
     return gap_name
 
+def resolve_excel_path(run_data: dict) -> str:
+    excel_path = run_data.get("file_path") if isinstance(run_data, dict) else None
+    if excel_path and os.path.exists(excel_path):
+        return excel_path
+
+    candidates = [
+        os.path.join(BASE_DIR, "FILTERED_8_TABLES_FINAL (1).xlsx"),
+        os.path.join(BASE_DIR, "CORRECTED_RULE_ENGINE_34_ATTRIBUTES.xlsx"),
+        os.path.join(BASE_DIR, "Updated_Intervention_Records_5_Patients_New_Measure_IDs.xlsx")
+    ]
+    if os.path.exists(UPLOADS_DIR):
+        try:
+            up_files = [os.path.join(UPLOADS_DIR, f) for f in os.listdir(UPLOADS_DIR) if f.endswith(".xlsx")]
+            candidates.extend(up_files)
+        except Exception:
+            pass
+
+    for cand in candidates:
+        if os.path.exists(cand):
+            return cand
+    return excel_path
+
 def load_run_data(job_id: str):
-    """Load run dataframes from scratch storage."""
+    """Load run dataframes from scratch storage with fallback to default/latest run."""
+    if not job_id or str(job_id).lower() in ["default", "demo", "latest", "null", "undefined", ""]:
+        job_id = "default"
+
     path = os.path.join(RUNS_DIR, f"{job_id}.pkl")
-    if not os.path.exists(path):
-        return None
-    with open(path, "rb") as f:
-        return pickle.load(f)
+    if os.path.exists(path):
+        try:
+            with open(path, "rb") as f:
+                res = pickle.load(f)
+                if isinstance(res, dict):
+                    res["file_path"] = resolve_excel_path(res)
+                return res
+        except Exception:
+            pass
+
+    default_path = os.path.join(RUNS_DIR, "default.pkl")
+    if os.path.exists(default_path):
+        try:
+            with open(default_path, "rb") as f:
+                res = pickle.load(f)
+                if isinstance(res, dict):
+                    res["file_path"] = resolve_excel_path(res)
+                return res
+        except Exception:
+            pass
+
+    if os.path.exists(RUNS_DIR):
+        try:
+            files = [os.path.join(RUNS_DIR, f) for f in os.listdir(RUNS_DIR) if f.endswith(".pkl")]
+            if files:
+                latest_file = max(files, key=os.path.getmtime)
+                with open(latest_file, "rb") as f:
+                    res = pickle.load(f)
+                    if isinstance(res, dict):
+                        res["file_path"] = resolve_excel_path(res)
+                    return res
+        except Exception:
+            pass
+
+    return None
 
 def save_run_data(job_id: str, data: dict):
     """Save run dataframes to scratch storage."""
